@@ -43,7 +43,7 @@ export const renderView = (context: { element: Element, data: WebApp }, plugin: 
       <webview allowfullscreen style="border: none" class="fn__flex-column fn__flex  fn__flex-1" src="${context.data.url}"
         ${context.data.proxy ? 'partition="' + context.data.name + '"' : ''} ${context.data.allowPopups ? 'allowpopups' : ''}></webview>
       <div class="webapp-view-controller">
-        <span class="pointer handle"><svg><use xlink:href="#iconSettings"></use></svg></span> 
+        <span class="pointer handle"><svg><use xlink:href="#iconSettings"></use></svg></span>
         <span class="pointer func home"><svg><use xlink:href="#iconLanguage"></use></svg>${plugin.i18n.home}</span>
         <span class="pointer func refresh"><svg><use xlink:href="#iconRefresh"></use></svg>${plugin.i18n.refresh}</span>
         <span class="pointer func goBack"><svg><use xlink:href="#iconLeft"></use></svg>${plugin.i18n.goBack}</span>
@@ -61,7 +61,7 @@ export const renderView = (context: { element: Element, data: WebApp }, plugin: 
   const cover = context.element.querySelector('.webapp-view-cover');
   const controller = context.element.querySelector('.webapp-view-controller');
   // disable popups
-  
+
 
   webview.addEventListener("dom-ready", () => {
     controller.querySelector('.home').addEventListener('click', () => {
@@ -71,23 +71,34 @@ export const renderView = (context: { element: Element, data: WebApp }, plugin: 
       webview.reload();
     });
     let zoom = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.5, 2, 2.5, 3];
-    let index = zoom.findIndex(v => v === 1);
+    // 从插件数据中获取存储的 zoom 配置
+    let zoomConfig = plugin.loadDataSync(`${context.data.name}_zoom.json`);
+    let index = zoomConfig ? zoomConfig.index : zoom.findIndex(v => v === 1);
+    // 设置初始 zoom
+    webview.setZoomFactor(zoom[index]);
+
     controller.querySelector('.zoomIn').addEventListener('click', () => {
       if (index < zoom.length - 1) {
         index++;
         webview.setZoomFactor(zoom[index]);
+        // 保存 zoom 配置到插件数据
+        plugin.saveData(`${context.data.name}_zoom.json`, { index });
       }
     });
     controller.querySelector('.zoomOut').addEventListener('click', () => {
       if (index > 0) {
         index--;
         webview.setZoomFactor(zoom[index]);
+        // 保存 zoom 配置到插件数据
+        plugin.saveData(`${context.data.name}_zoom.json`, { index });
       }
     });
     controller.querySelector('.zoomRecovery').addEventListener('click', () => {
       if (index > 0) {
         index = zoom.findIndex(v => v === 1);
         webview.setZoomFactor(zoom[index]);
+        // 保存 zoom 配置到插件数据
+        plugin.saveData(`${context.data.name}_zoom.json`, { index });
       }
     });
     controller.querySelector('.goBack').addEventListener('click', () => {
@@ -111,7 +122,7 @@ export const renderView = (context: { element: Element, data: WebApp }, plugin: 
         window.open = function (url) {
           console.log('window.open', url);
           window.location.href = url;
-        } 
+        }
         function getParentWithSiblings(node) {
            while (node) {
             if (node.tagName === 'a' || node.tagName === 'A') {
